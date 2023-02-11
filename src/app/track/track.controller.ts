@@ -7,8 +7,10 @@ import {
   Param,
   Delete,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ObjectId } from 'mongoose';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { TrackService } from './track.service';
 import { CreateTrackDto, UpdateTrackDto } from './dto/track.dto';
 import { CreateCommentDto, DeleteCommentDto } from './dto/comment.dto';
@@ -18,13 +20,19 @@ export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
   @Post()
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'picture', maxCount: 1 },
+      { name: 'audio', maxCount: 1 },
+    ]),
+  )
   create(@Body() createTrackDto: CreateTrackDto, picture, audio) {
     return this.trackService.create(createTrackDto, picture, audio);
   }
 
   @Get()
-  getAll() {
-    return this.trackService.getAll();
+  getAll(@Query('count') count: number, @Query('offset') offset: number) {
+    return this.trackService.getAll(count, offset);
   }
 
   @Get(':id')
